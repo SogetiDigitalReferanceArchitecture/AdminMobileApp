@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Http } from '@angular/http';
+import { Http, Headers} from '@angular/http';
 import {Observable} from 'rxjs/Observable';
 import 'rxjs/add/operator/map';
 
@@ -12,16 +12,22 @@ import 'rxjs/add/operator/map';
 export class User {
   name: string;
   email: string;
+  uid: number;
  
-  constructor(name: string, email: string) {
+  constructor(name: string, email: string, uid: number) {
     this.name = name;
     this.email = email;
+    this.uid = uid;
   }
 }
 
 @Injectable()
 export class AuthService {
   currentUser: User;
+  userId : number;
+  constructor (private http: Http) {}
+  //headers: Headers;
+  //resp;
  
   public login(credentials) {
     if (credentials.email === null || credentials.password === null) {
@@ -29,14 +35,31 @@ export class AuthService {
     } else {
       return Observable.create(observer => {
         // At this point make a request to your backend to make a real check!
-        let access = (credentials.password === "pass" && credentials.email === "mig@capg.com");
-        this.currentUser = new User('Mig', 'mig@capg.com');
-        observer.next(access);
-        observer.complete();
+        let data = {email: credentials.email, password: credentials.password};
+        let serviceEndpoint = 'http://localhost:8080/auth';
+        this.http.post(serviceEndpoint, JSON.stringify(data), {headers: new Headers({'Content-Type': 'application/json'})})
+                  .map(res => res.json())
+                  .subscribe((data) => {
+                      
+                      console.log("User id is : " + data.entity);
+                      let access = (data.entity != 0);
+                      console.log("access is : " + access);
+                      this.currentUser = new User('Mig', credentials.email , data.entity);
+                      observer.next(access);
+                      observer.complete();
+                  });
       });
     }
   }
- 
+
+  public myData(uid : number){
+    this.userId = uid;
+  }
+
+  public getUserId() : number {
+    return this.userId;
+  }
+
   public register(credentials) {
     if (credentials.email === null || credentials.password === null) {
       return Observable.throw("Please insert credentials");
