@@ -36,13 +36,13 @@ export class AuthService {
       return Observable.create(observer => {
         // At this point make a request to your backend to make a real check!
         let data = {email: credentials.email, password: credentials.password};
-        let serviceEndpoint = 'http://localhost:8080/auth';
+        let serviceEndpoint = 'http://169.46.151.170:8080/auth';
         this.http.post(serviceEndpoint, JSON.stringify(data), {headers: new Headers({'Content-Type': 'application/json'})})
                   .map(res => res.json())
                   .subscribe((data) => {
                       
                       console.log("User id is : " + data.entity);
-                      let access = (data.entity != 0);
+                      let access = (data.entity != 0 && !isNaN(data.entity));
                       console.log("access is : " + access);
                       this.currentUser = new User('Mig', credentials.email , data.entity);
                       observer.next(access);
